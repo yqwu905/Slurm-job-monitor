@@ -6,7 +6,7 @@ import tool
 import os
 import socks
 import socket
-import time
+import job_control
 
 
 # 此类实现了与服务器的连接,任务查询与提交,文件上传,脚本生成等等.
@@ -38,6 +38,11 @@ class server:
         else:
             logging.info("Upload success!")
 
+    def download(self, remote, local, recursive=True):
+        logging.info("Download {}@{}:{} to {}.".format(self.data['user'], self.data['server'], remote, local))
+        self.scp.get(remote, local, recursive=recursive)
+        logging.info("Download success.")
+
     def __repr__(self):
         return "{}@{}".format(self.data['user'], self.data['server'])
 
@@ -60,27 +65,59 @@ class server:
     # 函数说明:提交VASP任务至服务器
     # 参数:folder:VASP脚本文件夹;working_dir:工作目录(相对于default_dir);script_path:sbatch脚本路径.
     # 返回值:提交状态(True/False),任务信息.
-    def submit_vasp_job(self, folder, script_path, working_dir=''):
-        # logging.debug("Submit VASP job to {}@{}".format(self.data['user'], self.data['server']))
-        # self.upload(folder, self.data['default_dir'] + working_dir)
-        # logging.info("{}@{} VASP folder submitted successfully".format(self.data['user'], self.data['server']))
-        stdin, stdout, stderr = self.ssh.exec_command("sbatch {}".format(script_path))
+    def submit_job(self, remote, local):
+        logging.debug("Start submit {} to {}@{}:{}".format(local, self.data['user'], self.data['server'], remote))
+        folder = os.path.split(local)[-1]
+        sFile = None
+        for i in os.listdir(local):
+            if os.path.isfile("{}/{}".format(local, i)):
+                print(i)
+                print(os.path.splitext(i)[-1])
+                if os.path.splitext(i)[-1] == ".sbatch":
+                    logging.debug("Find sbatch file {}".format(i))
+                    sFile = i
+                    break
+        if sFile is None:
+            logging.error("Error: No sbatch file found.")
+            return True
+        logging.debug("Start submit folder")
+        self.upload(local, remote)
+        logging.info("Upload Success.")
+        logging.debug("Start submit sbatch")
+        stdin, stdout, stderr = self.ssh.exec_command("sbatch {}/{}/{}".format(remote, folder, sFile))
         res, err = stdout.read().decode(), stderr.read().decode()
         if err != '':
             logging.error("Script submit error for {}@{}:{}".format(self.data['user'], self.data['server'], err))
+            return False
         logging.info("script submit return: {}".format(res))
-        
-    # 
-    def query_job(self, id):
-        logging.debug("Query job info for {}@{}, id:{}.".format(self.data['user'], self.data['server'], id))
-        stdin, stdout, stderr = self.ssh.exec_command("scontrol show job {}".format(id))
+        print(res.split(" ")[-1])
+        job_info = self.query_job(res.split(" ")[-1])
+        job_list = job_control.jobs()
+        job_list.add_job(job_info['JobId'], self.data['server'], self.data['user'], '{}/{}'.format(remote, folder),
+                         local, job_info['JobState'])
+
+    #
+    def query_job(self, job_id):
+        logging.debug("Query job info for {}@{}, job_id:{}.".format(self.data['user'], self.data['server'], job_id))
+        stdin, stdout, stderr = self.ssh.exec_command("scontrol show job {}".format(job_id))
         res, err = stdout.read().decode(), stderr.read().decode()
         if err != '':
-            logging.error("Job query error for {}@{}, id:{}, err:{}".format(self.data['user'], self.data['server'], id, 
-                                                                            err))
+            logging.error("Job query error for {}@{}, job_id:{}, err:{}".format(self.data['user'], self.data['server'],
+                                                                                job_id, err))
         logging.debug("Job query return:{}".format(res))
         logging.info("Job query success:{}".format(tool.analyze_scontrol_job(res)))
+        return tool.analyze_scontrol_job(res)
 
+    def update_job_status(self, job_id):
+        logging.debug("Query job state for {}@{}, job_id:{}.".format(self.data['user'], self.data['server'], job_id))
+        stdin, stdout, stderr = self.ssh.exec_command("sacct -j {} --format State".format(job_id))
+        res, err = stdout.read().decode(), stderr.read().decode()
+        if err != '':
+            logging.error("Job update error for {}@{}, job_id:{}, err:{}".format(self.data['user'], self.data['server'],
+                                                                                job_id, err))
+        logging.debug("Job update return:{}".format(res))
+        logging.info("Job update success:{}".format(tool.analyze_sacct_job(res)))
+        return tool.analyze_sacct_job(res)
 
 def load_server_list(json_path='./server_list.json', proxy=False, proxy_host='127.0.0.1', proxy_port=1080):
     with open(json_path, 'r') as fp:

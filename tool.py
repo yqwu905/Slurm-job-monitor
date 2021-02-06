@@ -39,9 +39,16 @@ def analyze_scontrol_job(s):
         s = s[s.index(' ') + 1:]
         while s[0] == ' ':
             s = s[1:]
+            if len(s) == 0:
+                break
     return data
 
-
+def analyze_sacct_job(s):
+    status = s.split('\n')
+    print(status)
+    while '' in status:
+        status.remove('')
+    return status[-1]
 
 # 函数说明:生成VASP脚本
 # 参数:filename:生成的脚本路径;job_name:任务名称;code:脚本中要执行的指令;partition:提交的分区;time_lim:时间限制;module:需要加载的
