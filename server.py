@@ -84,7 +84,7 @@ class server:
         self.upload(local, remote)
         logging.info("Upload Success.")
         logging.debug("Start submit sbatch")
-        stdin, stdout, stderr = self.ssh.exec_command("sbatch {}/{}/{}".format(remote, folder, sFile))
+        stdin, stdout, stderr = self.ssh.exec_command("cd {}/{};sbatch {}".format(remote, folder, sFile))
         res, err = stdout.read().decode(), stderr.read().decode()
         if err != '':
             logging.error("Script submit error for {}@{}:{}".format(self.data['user'], self.data['server'], err))

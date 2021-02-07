@@ -11,12 +11,13 @@ from mainWin import Ui_Form
 class update_jobs(QtCore.QThread):
     finishSignal = QtCore.pyqtSignal(int)
 
-    def __init__(self, proxy, proxy_host, proxy_port, parent=None):
+    def __init__(self, proxy, proxy_host, proxy_port, server, parent=None):
         logging.debug("Thread update_jobs created.")
         super(update_jobs, self).__init__(parent)
         self.proxy = proxy
         self.proxy_port = proxy_port
         self.proxy_host = proxy_host
+        self.server = server
         with open('server_list.json', 'r') as fp:
             self.server_list = json.load(fp)
         self.jobs = job_control.jobs()
@@ -29,7 +30,7 @@ class update_jobs(QtCore.QThread):
 
     def run(self):
         logging.debug("Updating job info.")
-        connected_server = None
+        connected_server = self.server
         job_list = self.jobs.job_list.copy()
         compare = job_list.copy()
         total = len(job_list)
@@ -312,7 +313,7 @@ class main_ui(Ui_Form):
         logging.debug("Button update_jobs clicked.")
         self.progressBar.setValue(0)
         self.th = update_jobs(proxy=self.checkBox.isChecked(), proxy_host=self.lineEdit.text(),
-                              proxy_port=self.spinBox.value())
+                              proxy_port=self.spinBox.value(), server=self.server)
         self.th.finishSignal.connect(self.btn_update_jobs_update)
         self.th.start()
 
