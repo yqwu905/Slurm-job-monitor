@@ -1,6 +1,6 @@
 import time
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtGui import QStandardItemModel, QStandardItem
+from PyQt5.QtGui import QStandardItemModel, QStandardItem, QFont, QBrush, QColor
 import job_control
 import server
 import json
@@ -160,6 +160,11 @@ class main_ui(Ui_Form):
         self.btn_load()
 
     def load_job(self):
+        status_color_list = {" COMPLETED ": [72, 209, 204],
+                             " CANCELLED ": [255, 165, 0],
+                             " RUNING ": [0, 255, 127],
+                             " PENDING ": [255, 255, 0]
+                             }
         self.job_list = job_control.jobs().job_list
         self.job_data = QStandardItemModel(len(self.job_list), 3)
         self.job_data.setHorizontalHeaderLabels(["Id", "server", "status"])
@@ -168,6 +173,10 @@ class main_ui(Ui_Form):
             self.job_data.setItem(i, 1,
                                   QStandardItem("{}@{}".format(self.job_list[i]['user'], self.job_list[i]['server'])))
             self.job_data.setItem(i, 2, QStandardItem(self.job_list[i]['status']))
+            if self.job_list[i]['status'] in status_color_list.keys():
+                color = status_color_list[self.job_list[i]['status']]
+                for j in range(0, 3):
+                    self.job_data.item(i, j).setBackground(QBrush(QColor(color[0], color[1], color[2])))
         self.tableView.setModel(self.job_data)
 
     def write(self, text):
