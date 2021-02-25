@@ -119,7 +119,7 @@ class server:
                                                                                 job_id, err))
         logging.debug("Job update return:{}".format(res))
         logging.info("Job update success:{}".format(tool.analyze_sacct_job(res)))
-        return tool.analyze_sacct_job(res)
+        return tool.analyze_sacct_job(res).replace(' ', '')
 
 def load_server_list(json_path='./server_list.json', proxy=False, proxy_host='127.0.0.1', proxy_port=1080):
     with open(json_path, 'r') as fp:

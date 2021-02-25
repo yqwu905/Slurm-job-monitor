@@ -38,6 +38,9 @@ class update_jobs(QtCore.QThread):
         idx = 0
         while len(job_list) != 0:
             for job in compare:
+                if job['status'] not in ['RUNNING', 'PENDING']:
+                    job_list.remove(job)
+                    continue
                 logging.debug(job_list)
                 logging.debug("Processing job {}.".format(job['id']))
                 s = self.get_server(job)
@@ -56,9 +59,9 @@ class update_jobs(QtCore.QThread):
                         if res == job['status']:
                             logging.debug("Job {} state not change.".format(job['id']))
                         else:
-                            self.jobs.update_job_status(job['id'], res)
                             logging.info("Job {} status change from {} to {}.".format(job['id'], job['status'],
                                                                                       res))
+                            self.jobs.update_job_status(job['id'], res)
                         job_list.remove(job)
                         idx += 1
                         self.finishSignal.emit(int(100 * idx / total))
@@ -168,10 +171,10 @@ class main_ui(Ui_Form):
         logging.debug("Load job info.")
         show_hide = self.checkBox_3.isChecked()
         logging.debug("Show hide job:{}".format(show_hide))
-        status_color_list = {" COMPLETED ": [72, 209, 204],
-                             " CANCELLED ": [255, 165, 0],
-                             " RUNING ": [0, 255, 127],
-                             " PENDING ": [255, 255, 0]
+        status_color_list = {"COMPLETED": [72, 209, 204],
+                             "CANCELLED": [255, 165, 0],
+                             "RUNNING": [0, 255, 127],
+                             "PENDING": [255, 255, 0]
                              }
         self.job_list = job_control.jobs().job_list
         self.job_data = QStandardItemModel(len(self.job_list), 3)
