@@ -1,4 +1,5 @@
 import json
+import logging
 
 
 class jobs():
@@ -9,13 +10,14 @@ class jobs():
             self.job_list = json.load(fp)
 
     #
-    def add_job(self, job_id, server, user, work_dir, local, status):
+    def add_job(self, job_id, server, user, work_dir, local, status, hide=False):
         self.job_list.insert(0, {"id": job_id,
                                  "server": server,
                                  "user": user,
                                  "work_dir": work_dir,
                                  "local": local,
-                                 "status": status})
+                                 "status": status,
+                                 "hide": hide})
         with open(self.filename, 'w') as fp:
             json.dump(self.job_list, fp)
 
@@ -33,3 +35,10 @@ class jobs():
         for i in self.job_list:
             if i['job_id'] == job_id:
                 return i
+
+    def hide(self, idx):
+        logging.debug("Change job visibility from {} to {}.".format(not self.job_list[idx]['hide'],
+                                                                    self.job_list[idx]['hide']))
+        self.job_list[idx]['hide'] = not self.job_list[idx]['hide']
+        with open(self.filename, 'w') as fp:
+            json.dump(self.job_list, fp)

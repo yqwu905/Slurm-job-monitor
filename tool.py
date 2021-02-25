@@ -33,8 +33,8 @@ def analyze_scontrol_job(s):
     s = s[:s.index('Power')]
     data = {}
     while '=' in s:
-        key = s[:s.index('=')].replace('\n','')
-        value = s[s.index('=')+1:s.index(' ')].replace('\n','')
+        key = s[:s.index('=')].replace('\n', '')
+        value = s[s.index('=') + 1:s.index(' ')].replace('\n', '')
         data[key] = value
         s = s[s.index(' ') + 1:]
         while s[0] == ' ':
@@ -43,12 +43,14 @@ def analyze_scontrol_job(s):
                 break
     return data
 
+
 def analyze_sacct_job(s):
     status = s.split('\n')
     print(status)
     while '' in status:
         status.remove('')
     return status[-1]
+
 
 # 函数说明:生成VASP脚本
 # 参数:filename:生成的脚本路径;job_name:任务名称;code:脚本中要执行的指令;partition:提交的分区;time_lim:时间限制;module:需要加载的
@@ -101,12 +103,17 @@ def generate_VASP_script(filename, job_name, code, partition='compute', time_lim
 def dos2unix(filepath):
     dos = b'\r\n'
     unix = b'\n'
-    # relative or absolute file path, e.g.:
-    with open(filepath, 'rb') as open_file:
-        content = open_file.read()
-    content = content.replace(dos, unix)
-    with open(filepath, 'wb') as open_file:
-        open_file.write(content)
+    if os.path.isfile(filepath):
+        with open(filepath, 'rb') as open_file:
+            content = open_file.read()
+        content = content.replace(dos, unix)
+        with open(filepath, 'wb') as open_file:
+            open_file.write(content)
+    if os.path.isdir(filepath):
+        for dirpath, dirname, filenames in os.walk(filepath):
+            for filename in filenames:
+                logging.debug("Executing {}.".format(os.path.join(dirpath, filename)))
+                dos2unix(os.path.join(dirpath, filename))
 
 
 # 函数说明:初始化工作目录,检测server_list.json的存在,并创建job_list.json

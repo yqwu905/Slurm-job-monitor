@@ -6,6 +6,7 @@ import server
 import json
 import logging
 from mainWin import Ui_Form
+import tool
 
 
 class update_jobs(QtCore.QThread):
@@ -95,15 +96,16 @@ class download_job(QtCore.QThread):
 class submit_job(QtCore.QThread):
     finishSignal = QtCore.pyqtSignal(int)
 
-    def __init__(self, s, remote, local, parent=None):
+    def __init__(self, s, remote, local, dos2unix, parent=None):
         logging.debug("Thread submit_job created.")
         super(submit_job, self).__init__(parent)
         self.s = s
         self.remote = remote
         self.local = local
+        self.dos2unix = dos2unix
 
     def run(self):
-        self.s.submit_job(self.remote, self.local)
+        self.s.submit_job(self.remote, self.local, self.dos2unix)
         self.finishSignal.emit(0)
 
 
@@ -154,12 +156,18 @@ class main_ui(Ui_Form):
 
     def setupUi(self, Form):
         super().setupUi(Form)
+        tool.init()
         self.btn_initial_()
+        self.checkBox_3.stateChanged.connect(self.load_job)
         self.progressBar.setValue(100)
+        self.checkBox_3.setChecked(True)
         self.load_job()
         self.btn_load()
 
     def load_job(self):
+        logging.debug("Load job info.")
+        show_hide = self.checkBox_3.isChecked()
+        logging.debug("Show hide job:{}".format(show_hide))
         status_color_list = {" COMPLETED ": [72, 209, 204],
                              " CANCELLED ": [255, 165, 0],
                              " RUNING ": [0, 255, 127],
@@ -178,6 +186,11 @@ class main_ui(Ui_Form):
                 for j in range(0, 3):
                     self.job_data.item(i, j).setBackground(QBrush(QColor(color[0], color[1], color[2])))
         self.tableView.setModel(self.job_data)
+        for i in range(len(self.job_list)):
+            self.tableView.showRow(i)
+            if (show_hide is False) and self.job_list[i]['hide']:
+                logging.debug("Hide job {}.".format(self.job_list[i]['id']))
+                self.tableView.hideRow(i)
 
     def write(self, text):
         if text[-1] == '\n':
@@ -198,6 +211,7 @@ class main_ui(Ui_Form):
         self.pushButton_5.clicked.connect(self.btn_submit_job)
         self.pushButton_2.clicked.connect(self.btn_download)
         self.pushButton.clicked.connect(self.btn_update_jobs)
+        self.pushButton_10.clicked.connect(self.btn_hide)
 
     def btn_load(self):
         logging.debug("Button Load clicked.")
@@ -282,7 +296,7 @@ class main_ui(Ui_Form):
     def btn_submit_job(self):
         self.progressBar.setValue(0)
         logging.debug("Button submit clicked.")
-        self.th = submit_job(self.server, self.lineEdit_4.text(), self.lineEdit_3.text())
+        self.th = submit_job(self.server, self.lineEdit_4.text(), self.lineEdit_3.text(), self.checkBox_2.isChecked())
         self.th.finishSignal.connect(self.btn_submit_job_finish)
         self.th.start()
 
@@ -331,3 +345,14 @@ class main_ui(Ui_Form):
         if p == 100:
             self.load_job()
             logging.info("Update jobs info success")
+
+    def btn_hide(self):
+        self.progressBar.setValue(0)
+        idx = self.tableView.currentIndex().row()
+        logging.debug("Select row {}.".format(idx))
+        job = job_control.jobs()
+        job.hide(idx)
+        logging.debug("Reload tableview.")
+        self.load_job()
+        self.progressBar.setValue(100)
+

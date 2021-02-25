@@ -65,7 +65,7 @@ class server:
     # 函数说明:提交VASP任务至服务器
     # 参数:folder:VASP脚本文件夹;working_dir:工作目录(相对于default_dir);script_path:sbatch脚本路径.
     # 返回值:提交状态(True/False),任务信息.
-    def submit_job(self, remote, local):
+    def submit_job(self, remote, local, dos2unix=False):
         logging.debug("Start submit {} to {}@{}:{}".format(local, self.data['user'], self.data['server'], remote))
         folder = os.path.split(local)[-1]
         sFile = None
@@ -80,6 +80,8 @@ class server:
         if sFile is None:
             logging.error("Error: No sbatch file found.")
             return True
+        if dos2unix:
+            tool.dos2unix(local)
         logging.debug("Start submit folder")
         self.upload(local, remote)
         logging.info("Upload Success.")
