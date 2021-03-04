@@ -38,7 +38,7 @@ class update_jobs(QtCore.QThread):
         idx = 0
         while len(job_list) != 0:
             for job in compare:
-                if job['status'] not in ['RUNNING', 'PENDING']:
+                if job['status'] in ['COMPLETED', "CANCELED"]:
                     job_list.remove(job)
                     continue
                 logging.debug(job_list)
@@ -173,6 +173,7 @@ class main_ui(Ui_Form):
         logging.debug("Show hide job:{}".format(show_hide))
         status_color_list = {"COMPLETED": [72, 209, 204],
                              "CANCELLED": [255, 165, 0],
+                             "CANCELLED+": [255, 165, 0],
                              "RUNNING": [0, 255, 127],
                              "PENDING": [255, 255, 0]
                              }

@@ -50,7 +50,7 @@ class server:
     # 参数:无
     # 返回值:一个描述任务的dict构成的列表,关于相应dict请查阅tool.analyze_squeue_jobs
     def query_jobs(self):
-        logging.debug("Start query job for {}@{}".format(self.data['user'], self.data['server']))
+        logging.info("Start query job for {}@{}".format(self.data['user'], self.data['server']))
         stdin, stdout, stderr = self.ssh.exec_command("squeue")
         res, err = stdout.read().decode(), stderr.read().decode()
         if err != '':
@@ -87,16 +87,17 @@ class server:
         logging.info("Upload Success.")
         logging.debug("Start submit sbatch")
         stdin, stdout, stderr = self.ssh.exec_command("cd {}/{};sbatch {}".format(remote, folder, sFile))
-        res, err = stdout.read().decode(), stderr.read().decode()
+        res, err = stdout.read().decode().replace('\n', ''), stderr.read().decode()
         if err != '':
             logging.error("Script submit error for {}@{}:{}".format(self.data['user'], self.data['server'], err))
             return False
         logging.info("script submit return: {}".format(res))
-        print(res.split(" ")[-1])
-        job_info = self.query_job(res.split(" ")[-1])
+        job_status = self.update_job_status(res.split(" ")[-1])
+        logging.info("Query job.")
         job_list = job_control.jobs()
-        job_list.add_job(job_info['JobId'], self.data['server'], self.data['user'], '{}/{}'.format(remote, folder),
-                         local, job_info['JobState'])
+        job_list.add_job(res.split(" ")[-1], self.data['server'], self.data['user'], '{}/{}'.format(remote, folder),
+                         local, job_status)
+        logging.info("Function upload down.")
 
     #
     def query_job(self, job_id):
@@ -111,9 +112,12 @@ class server:
         return tool.analyze_scontrol_job(res)
 
     def update_job_status(self, job_id):
+        print(job_id)
         logging.debug("Query job state for {}@{}, job_id:{}.".format(self.data['user'], self.data['server'], job_id))
         stdin, stdout, stderr = self.ssh.exec_command("sacct -j {} --format State".format(job_id))
+        print("sacct -j {} --format State".format(job_id))
         res, err = stdout.read().decode(), stderr.read().decode()
+        print(res)
         if err != '':
             logging.error("Job update error for {}@{}, job_id:{}, err:{}".format(self.data['user'], self.data['server'],
                                                                                 job_id, err))
