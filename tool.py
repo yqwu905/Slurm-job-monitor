@@ -138,13 +138,13 @@ def init():
 # 参数:无
 # 返回值:表示是否有更新的bool,以及更新描述字符串
 def check_update():
-    version = "v1.1.1"
+    version = "v1.1.2"
     url = "https://api.github.com/repos/yqwu905/Slurm-job-monitor/releases/latest"
     r = requests.get(url)
     data = json.loads(r.text)
     if data['tag_name'] == version:
         return False, None
     else:
-        return True, [f"<font color='red'>可更新的版本发现:{data['tag_name']}<font>\n",
-                      f"<font color='red'>更新描述:{data['name']}<font>\n",
-                      f"<font color='red'>更新特性:{data['body']}<font>\n"]
+        return True, [f"<font color='red'>可更新的版本发现:{data['tag_name']}<font>",
+                      f"<font color='red'>更新描述:{data['name']}<font>",
+                      f"<font color='red'>更新特性:{data['body']}<font>"]

@@ -212,7 +212,6 @@ class main_ui(Ui_Form):
 
     def write(self, text):
         self.textBrowser.append(text)
-        # self.textBrowser.moveCursor(self.textBrowser.textCursor().End)
 
     def flush(self):
         pass
