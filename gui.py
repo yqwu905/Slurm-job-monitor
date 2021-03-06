@@ -77,7 +77,7 @@ class update_jobs(QtCore.QThread):
 class download_job(QtCore.QThread):
     finishSignal = QtCore.pyqtSignal(int)
 
-    def __init__(self, data, proxy, proxy_host, proxy_port, remote, local, parent=None):
+    def __init__(self, data, proxy, proxy_host, proxy_port, remote, local, download_list, parent=None):
         logging.debug("Thread download_job created.")
         super(download_job, self).__init__(parent)
         self.data = data
@@ -86,13 +86,24 @@ class download_job(QtCore.QThread):
         self.proxy_host = proxy_host
         self.remote = remote
         self.local = local
+        self.download_list = download_list
 
     def run(self):
         logging.info("Connect to {}@{}".format(self.data['user'], self.data['server']))
         s = server.server(self.data, self.proxy, self.proxy_host, self.proxy_port)
-        logging.info("Downloading {}@{}:{} to {}.".format(s.data['user'], s.data['server'],
-                                                          self.remote, self.local))
-        s.download(self.remote, self.local)
+        for i in self.download_list:
+            stdin, stdout, stderr = s.ssh.exec_command(f"ls {self.remote}/{i}")
+            res, err = stdout.read().decode(), stderr.read().decode()
+            if err != '':
+                logging.error(f"Failed to list file:{err}")
+                continue
+            for file in res.split('\n'):
+                if file == '':
+                    continue
+                else:
+                    logging.info("Downloading {}@{}:{}/{} to {}.".format(s.data['user'], s.data['server'], file,
+                                                                      self.remote, self.local))
+                    s.download(f"{file}", self.local)
         self.finishSignal.emit(0)
 
 
@@ -326,8 +337,10 @@ class main_ui(Ui_Form):
             logging.error("No proper server found.")
             return False
         local = QtWidgets.QFileDialog.getExistingDirectory(None, "选取文件夹", "./")
+        download_list = self.lineEdit_5.text().split(" ")
         self.th = download_job(data, proxy=self.checkBox.isChecked(), proxy_host=self.lineEdit.text(),
-                               proxy_port=self.spinBox.value(), remote=self.job_list[idx]['work_dir'], local=local)
+                               proxy_port=self.spinBox.value(), remote=self.job_list[idx]['work_dir'], local=local,
+                               download_list = download_list)
         self.th.finishSignal.connect(self.btn_download_finished)
         self.th.start()
 
