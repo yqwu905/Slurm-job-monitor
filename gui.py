@@ -163,7 +163,6 @@ class main_ui(Ui_Form):
         self.btn_initial_()
         self.checkBox_3.stateChanged.connect(self.load_job)
         self.progressBar.setValue(100)
-        self.checkBox_3.setChecked(True)
         self.load_job()
         self.btn_load()
 
