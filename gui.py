@@ -102,7 +102,7 @@ class download_job(QtCore.QThread):
                     continue
                 else:
                     logging.info("Downloading {}@{}:{}/{} to {}.".format(s.data['user'], s.data['server'], file,
-                                                                      self.remote, self.local))
+                                                                         self.remote, self.local))
                     s.download(f"{file}", self.local)
         self.finishSignal.emit(0)
 
@@ -170,6 +170,10 @@ class main_ui(Ui_Form):
 
     def setupUi(self, Form):
         super().setupUi(Form)
+        flag, s = tool.check_update()
+        if flag:
+            for i in s:
+                self.write(i)
         tool.init()
         self.btn_initial_()
         self.checkBox_3.stateChanged.connect(self.load_job)
@@ -207,10 +211,8 @@ class main_ui(Ui_Form):
                 self.tableView.hideRow(i)
 
     def write(self, text):
-        if text[-1] == '\n':
-            text = text[:-1]
         self.textBrowser.append(text)
-        self.textBrowser.moveCursor(self.textBrowser.textCursor().End)
+        # self.textBrowser.moveCursor(self.textBrowser.textCursor().End)
 
     def flush(self):
         pass
@@ -340,7 +342,7 @@ class main_ui(Ui_Form):
         download_list = self.lineEdit_5.text().split(" ")
         self.th = download_job(data, proxy=self.checkBox.isChecked(), proxy_host=self.lineEdit.text(),
                                proxy_port=self.spinBox.value(), remote=self.job_list[idx]['work_dir'], local=local,
-                               download_list = download_list)
+                               download_list=download_list)
         self.th.finishSignal.connect(self.btn_download_finished)
         self.th.start()
 
@@ -371,4 +373,3 @@ class main_ui(Ui_Form):
         logging.debug("Reload tableview.")
         self.load_job()
         self.progressBar.setValue(100)
-

@@ -1,6 +1,7 @@
 import logging
 import os
 import json
+import requests
 
 
 # 函数说明:此函数用于格式化squeue得到的job信息
@@ -131,3 +132,19 @@ def init():
             json.dump(data, fp)
     logging.info("Init success")
     return True
+
+
+# 函数说明：检查是否有更新
+# 参数:无
+# 返回值:表示是否有更新的bool,以及更新描述字符串
+def check_update():
+    version = "v1.1.1"
+    url = "https://api.github.com/repos/yqwu905/Slurm-job-monitor/releases/latest"
+    r = requests.get(url)
+    data = json.loads(r.text)
+    if data['tag_name'] == version:
+        return False, None
+    else:
+        return True, [f"<font color='red'>可更新的版本发现:{data['tag_name']}<font>\n",
+                      f"<font color='red'>更新描述:{data['name']}<font>\n",
+                      f"<font color='red'>更新特性:{data['body']}<font>\n"]
