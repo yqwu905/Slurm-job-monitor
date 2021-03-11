@@ -189,7 +189,8 @@ class main_ui(Ui_Form):
                              "CANCELLED": [255, 165, 0],
                              "CANCELLED+": [255, 165, 0],
                              "RUNNING": [0, 255, 127],
-                             "PENDING": [255, 255, 0]
+                             "PENDING": [255, 255, 0],
+                             "FAILED": [255, 0, 0],
                              }
         self.job_list = job_control.jobs().job_list
         self.job_data = QStandardItemModel(len(self.job_list), 3)
