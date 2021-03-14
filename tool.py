@@ -2,6 +2,7 @@ import logging
 import os
 import json
 import requests
+import re
 
 
 # 函数说明:此函数用于格式化squeue得到的job信息
@@ -148,3 +149,12 @@ def check_update():
         return True, [f"<font color='red'>可更新的版本发现:{data['tag_name']}<font>",
                       f"<font color='red'>更新描述:{data['name']}<font>",
                       f"<font color='red'>更新特性:{data['body']}<font>"]
+
+
+def get_job_name(filename):
+    with open(filename, 'r') as fp:
+        lines = fp.readlines()
+    for line in lines:
+        re_r = re.match('#SBATCH *-J *([^ ]*) (.*)', line)
+        if re_r is not None:
+            return re_r.group(1)

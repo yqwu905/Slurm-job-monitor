@@ -193,16 +193,20 @@ class main_ui(Ui_Form):
                              "FAILED": [255, 0, 0],
                              }
         self.job_list = job_control.jobs().job_list
-        self.job_data = QStandardItemModel(len(self.job_list), 3)
-        self.job_data.setHorizontalHeaderLabels(["Id", "server", "status"])
+        self.job_data = QStandardItemModel(len(self.job_list), 4)
+        self.job_data.setHorizontalHeaderLabels(["Name", "status", "id", "server"])
         for i in range(len(self.job_list)):
-            self.job_data.setItem(i, 0, QStandardItem(self.job_list[i]['id']))
-            self.job_data.setItem(i, 1,
+            if 'name' in self.job_list[i]:
+                self.job_data.setItem(i, 0, QStandardItem(self.job_list[i]['name']))
+            else:
+                self.job_data.setItem(i, 0, QStandardItem(''))
+            self.job_data.setItem(i, 1, QStandardItem(self.job_list[i]['status']))
+            self.job_data.setItem(i, 2, QStandardItem(self.job_list[i]['id']))
+            self.job_data.setItem(i, 3,
                                   QStandardItem("{}@{}".format(self.job_list[i]['user'], self.job_list[i]['server'])))
-            self.job_data.setItem(i, 2, QStandardItem(self.job_list[i]['status']))
             if self.job_list[i]['status'] in status_color_list.keys():
                 color = status_color_list[self.job_list[i]['status']]
-                for j in range(0, 3):
+                for j in range(0, 4):
                     self.job_data.item(i, j).setBackground(QBrush(QColor(color[0], color[1], color[2])))
         self.tableView.setModel(self.job_data)
         for i in range(len(self.job_list)):
@@ -210,6 +214,24 @@ class main_ui(Ui_Form):
             if (show_hide is False) and self.job_list[i]['hide']:
                 logging.debug("Hide job {}.".format(self.job_list[i]['id']))
                 self.tableView.hideRow(i)
+        self.job_data.itemChanged.connect(self.edit_job_info)
+
+    def edit_job_info(self, item):
+        prop = ["name", "status", "id"]
+        j = job_control.jobs()
+        if item.column() > 3:
+            raise Exception("Column numbers exceeds.")
+        if item.column() == 3:
+            data = item.text().split('@')
+            if len(data) != 2:
+                raise Exception("Invalid remote address was given.")
+            j.job_list[item.row()]['user'] = data[0]
+            j.job_list[item.row()]['server'] = data[1]
+        else:
+            j.job_list[item.row()][prop[item.column()]] = str(item.text())
+        print(j.job_list)
+        j.save()
+        self.load_job()
 
     def write(self, text):
         self.textBrowser.append(text)

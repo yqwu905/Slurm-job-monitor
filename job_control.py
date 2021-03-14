@@ -10,8 +10,9 @@ class jobs():
             self.job_list = json.load(fp)
 
     #
-    def add_job(self, job_id, server, user, work_dir, local, status, hide=False):
-        self.job_list.insert(0, {"id": job_id,
+    def add_job(self, job_id, server, user, work_dir, local, status, job_name='', hide=False):
+        self.job_list.insert(0, {"name": job_name,
+                                 "id": job_id,
                                  "server": server,
                                  "user": user,
                                  "work_dir": work_dir,
@@ -40,5 +41,9 @@ class jobs():
         logging.debug("Change job visibility from {} to {}.".format(not self.job_list[idx]['hide'],
                                                                     self.job_list[idx]['hide']))
         self.job_list[idx]['hide'] = not self.job_list[idx]['hide']
+        with open(self.filename, 'w') as fp:
+            json.dump(self.job_list, fp)
+
+    def save(self):
         with open(self.filename, 'w') as fp:
             json.dump(self.job_list, fp)

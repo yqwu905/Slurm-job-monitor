@@ -95,8 +95,9 @@ class server:
         job_status = self.update_job_status(res.split(" ")[-1])
         logging.info("Query job.")
         job_list = job_control.jobs()
+        
         job_list.add_job(res.split(" ")[-1], self.data['server'], self.data['user'], '{}/{}'.format(remote, folder),
-                         local, job_status)
+                         local, job_status, job_name=tool.get_job_name(f"{local}/{sFile}"))
         logging.info("Function upload down.")
 
     #
