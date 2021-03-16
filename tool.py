@@ -139,7 +139,7 @@ def init():
 # 参数:无
 # 返回值:表示是否有更新的bool,以及更新描述字符串
 def check_update():
-    version = "v1.1.2"
+    version = "v1.1.3"
     url = "https://api.github.com/repos/yqwu905/Slurm-job-monitor/releases/latest"
     r = requests.get(url)
     data = json.loads(r.text)
