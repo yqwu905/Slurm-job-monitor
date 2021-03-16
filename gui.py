@@ -214,6 +214,7 @@ class main_ui(Ui_Form):
             if (show_hide is False) and self.job_list[i]['hide']:
                 logging.debug("Hide job {}.".format(self.job_list[i]['id']))
                 self.tableView.hideRow(i)
+        self.tableView.horizontalHeader().setSectionResizeMode(1)
         self.job_data.itemChanged.connect(self.edit_job_info)
 
     def edit_job_info(self, item):
