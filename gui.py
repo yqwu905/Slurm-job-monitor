@@ -38,7 +38,7 @@ class update_jobs(QtCore.QThread):
         idx = 0
         while len(job_list) != 0:
             for job in compare:
-                if job['status'] in ['COMPLETED', "CANCELED"]:
+                if job['status'] in ['COMPLETED', "CANCELLED", "FAILED", "CANCELLED+"]:
                     job_list.remove(job)
                     continue
                 logging.debug(job_list)
