@@ -251,6 +251,8 @@ class main_ui(Ui_Form):
         self.pushButton_2.clicked.connect(self.btn_download)
         self.pushButton.clicked.connect(self.btn_update_jobs)
         self.pushButton_10.clicked.connect(self.btn_hide)
+        self.pushButton_11.clicked.connect(self.btn_delete)
+        self.pushButton_12.clicked.connect(self.btn_test)
 
     def btn_load(self):
         logging.debug("Button Load clicked.")
@@ -395,4 +397,20 @@ class main_ui(Ui_Form):
         job.hide(idx)
         logging.debug("Reload tableview.")
         self.load_job()
+        self.progressBar.setValue(100)
+
+    def btn_delete(self):
+        self.progressBar.setValue(0)
+        idx = self.tableView.currentIndex().row()
+        logging.debug("Select row {}.".format(idx))
+        job = job_control.jobs()
+        job.delete(idx)
+        logging.debug("Reload tableview.")
+        self.load_job()
+        self.progressBar.setValue(100)
+
+    def btn_test(self):
+        self.progressBar.setValue(0)
+        idx = self.tableView.currentIndex().row()
+        logging.info("Select row {}.".format(idx))
         self.progressBar.setValue(100)

@@ -44,6 +44,12 @@ class jobs():
         with open(self.filename, 'w') as fp:
             json.dump(self.job_list, fp)
 
+    def delete(self, idx):
+        logging.debug(f"Delete job {idx}.")
+        del self.job_list[idx]
+        with open(self.filename, 'w') as fp:
+            json.dump(self.job_list, fp)
+
     def save(self):
         with open(self.filename, 'w') as fp:
             json.dump(self.job_list, fp)
